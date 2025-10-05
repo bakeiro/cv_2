@@ -25,7 +25,7 @@ cat > install_ubuntu.sh << 'EOF'
 echo "=== Instalando Ubuntu 22.04 LTS ==="
 
 # Instalar Ubuntu
-proot-distro install ubuntu-22.04
+proot-distro install ubuntu
 
 if [ $? -eq 0 ]; then
     echo "=== Ubuntu instalado correctamente ==="
@@ -81,7 +81,7 @@ EOFINNER
 
     chmod +x ~/configure_ubuntu.sh
     
-    echo "Ejecuta: proot-distro login ubuntu-22.04"
+    echo "Ejecuta: proot-distro login ubuntu"
     echo "Luego dentro de Ubuntu ejecuta: /root/configure_ubuntu.sh"
 else
     echo "Error en la instalación de Ubuntu"
@@ -255,7 +255,7 @@ chmod +x install_ubuntu.sh
 
 echo ""
 echo "=== PRÓXIMOS PASOS MANUALES ==="
-echo "1. Ejecuta: proot-distro login ubuntu-22.04"
+echo "1. Ejecuta: proot-distro login ubuntu"
 echo "2. Dentro de Ubuntu, ejecuta el script de configuración"
 echo "3. Luego instala Steam con el script correspondiente"
 echo ""
