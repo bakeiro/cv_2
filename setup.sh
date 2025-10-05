@@ -100,33 +100,53 @@ if [ ! -f /etc/os-release ]; then
     exit 1
 fi
 
+echo "=== Instalando dependencias necesarias ==="
+apt update
+apt install -y wget curl libc6 libx11-6 libxcb1 libxext6 libxss1 libxtst6 libudev1 libinput10 libevent-2.1-7
+
 echo "=== Descargando e instalando Steam ==="
 
 # Crear directorio para Steam
 mkdir -p ~/steam
 cd ~/steam
 
-# Descargar Steam para ARM64
-wget -O steam-launcher https://github.com/mmtrt/STEAM_LINUX_ARM64/releases/download/continuous/steam-launcher
-
-if [ $? -eq 0 ]; then
-    chmod +x steam-launcher
+# MÉTODO 1: Steam oficial
+echo "Método 1: Descargando Steam oficial..."
+if wget -O steam.deb "https://cdn.akamai.steamstatic.com/client/installer/steam.deb"; then
+    echo "Steam oficial descargado, instalando..."
+    apt install -f -y ./steam.deb
+    echo "=== Steam oficial instalado ==="
     
-    # Crear script de lanzamiento
-    cat > ~/launch_steam.sh << 'EOFINNER'
+# MÉTODO 2: Steam desde repositorio Debian
+elif wget -O steam.deb "http://ftp.us.debian.org/debian/pool/non-free/s/steam/steam_1.0.0.78+ds.2-1_arm64.deb"; then
+    echo "Steam Debian descargado, instalando..."
+    apt install -f -y ./steam.deb
+    echo "=== Steam Debian instalado ==="
+
+# MÉTODO 3: Steam flatpak
+else
+    echo "Instalando Steam via Flatpak..."
+    apt install -y flatpak
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak install -y flathub com.valvesoftware.Steam
+    echo "=== Steam Flatpak instalado ==="
+fi
+
+# Crear script de lanzamiento
+cat > ~/launch_steam.sh << 'EOFINNER'
 #!/bin/bash
 export PULSE_RUNTIME_PATH=/run/user/$(id -u)/pulse
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DISPLAY=:0
+export STEAM_RUNTIME=1
+export DBUS_FATAL_WARNINGS=0
 
-# Iniciar X server si no está corriendo
 if ! pgrep -x "Xorg" > /dev/null; then
     echo "Iniciando X server..."
     startx &
     sleep 5
 fi
 
-# Iniciar PulseAudio si no está corriendo
 if ! pgrep -x "pulseaudio" > /dev/null; then
     echo "Iniciando PulseAudio..."
     pulseaudio --start &
@@ -134,17 +154,19 @@ if ! pgrep -x "pulseaudio" > /dev/null; then
 fi
 
 echo "Iniciando Steam..."
-cd ~/steam
-./steam-launcher
+if command -v steam &> /dev/null; then
+    steam
+elif command -v flatpak &> /dev/null && flatpak list | grep -q com.valvesoftware.Steam; then
+    flatpak run com.valvesoftware.Steam
+else
+    echo "Steam no encontrado."
+fi
 EOFINNER
 
-    chmod +x ~/launch_steam.sh
-    
-    echo "=== Steam instalado correctamente ==="
-    echo "Para ejecutar Steam usa: ~/launch_steam.sh"
-else
-    echo "Error al descargar Steam"
-fi
+chmod +x ~/launch_steam.sh
+
+echo "=== Steam instalado correctamente ==="
+echo "Para ejecutar Steam usa: ~/launch_steam.sh"
 EOF
 
 # Script 4: Setup GUI
